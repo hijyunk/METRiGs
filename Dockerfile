@@ -8,14 +8,15 @@ RUN apt -y update && apt -y upgrade && apt -y install git net-tools vim
 WORKDIR '/root'
 
 # 의존성 설치
-RUN git clone https://github.com/hijyunk/METRiGs METRiGs2
-WORKDIR '/root/METRiGs2/node'
+RUN git clone https://github.com/malangzo/METRiGs METRiGs1
+WORKDIR '/root/METRiGs1/node'
 RUN npm install
 RUN npm install -g nodemon
 
-# 의존성 설치
-RUN git clone https://github.com/malangzo/METRiGs METRiGs1
-WORKDIR '/root/METRiGs1/node'
+# 다른 git 가져오기
+WORKDIR '/root'
+RUN git clone https://github.com/hijyunk/METRiGs METRiGs2
+WORKDIR '/root/METRiGs2/node'
 RUN npm install
 RUN npm install -g nodemon
 
