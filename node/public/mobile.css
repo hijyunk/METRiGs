@@ -1,0 +1,35 @@
+/* 모바일 화면용 미디어 쿼리 */
+@media (max-width: 600px) {
+    header {
+        padding: 15px;
+    }
+    .header-content img {
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+    }
+    .header-content h1 {
+        font-size: 1.5em;
+    }
+    main {
+        padding: 10px;
+    }
+    img.upload-icon {
+        width: 40%;
+    }
+    .upload-text {
+        font-size: 1.2em;
+    }
+    #languageSelect, #translate {
+        padding: 10px 12px; /* 패딩 조정 */
+        font-size: 14px; /* 글자 크기 조정 */
+        white-space: nowrap; /* 텍스트 줄 바꿈 방지 */
+    }
+    #options {
+        gap: 20px; /* 버튼 간 간격 조정 */
+    }
+    #uploadedImage {
+        margin-top: 30px;
+        max-width: 100%;
+    }
+}

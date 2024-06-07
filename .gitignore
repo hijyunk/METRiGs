@@ -1,0 +1,13 @@
+.env
+
+node/.env
+node/node_modules
+node/package-lock.json
+node/uploads
+node/OriginalMenus
+
+python/__pycache__
+python/*.ipynb
+python/.venv
+python/temp
+python/temp.py

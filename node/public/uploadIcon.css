@@ -1,0 +1,13 @@
+#uploadIcon {
+	margin: 10% auto;
+}
+img.upload-icon {
+	width: 30%;
+	cursor: pointer;
+}
+.upload-text {
+	margin-top: 20px;
+	font-size: 1em;
+	color: #333;
+	letter-spacing: -1px;
+}

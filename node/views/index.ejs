@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METRiGs</title>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="body.css">
+	<link rel="stylesheet" href="uploadIcon.css">
+    <link rel="stylesheet" href="button.css">
+    <link rel="stylesheet" href="mobile.css">
+    <style>
+        #uploadedImage {
+            display: none;
+            width: 80%;
+            max-width: 500px;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="reload.svg" alt="reload icon" class="reload-icon" onclick="reloadPage()">
+            <h1><span class="home-link" onclick="redirectHome()">METRiGs</span></h1>
+        </div>
+    </header> 
+    <main>
+        <input type="file" name="image" accept="image/*" onchange="uploadImage(event)" style="display: none;" id="fileInput"/>
+        <div id="uploadIcon">
+            <img src="upload.svg" alt="upload icon" class="upload-icon" onclick="document.getElementById('fileInput').click();">
+        </div>
+        <div class="upload-text">번역할 이미지를 업로드하세요</div>
+        <img id="uploadedImage" alt="uploaded image"/>
+        <div id="options" style="display: none;">
+            <div id="languageSelectContainer">
+                <button id="languageSelect" onclick="toggleDropdown()">언어 선택
+                    <span class="material-icons" id="dropdownIcon">arrow_drop_down</span>
+                </button>
+                <div id="languageDropdown" style="display: none;">
+                    <div class="dropdown-option" onclick="selectLanguage('ko')">한국어</div>
+                    <div class="dropdown-option" onclick="selectLanguage('en')">영어</div>
+                </div>
+            </div>
+            <button id="translate" onclick="translateImage()">번역하기</button>
+        </div>
+    </main>
+    <script>
+        const PORT1 = "<%= PORT1 %>";
+        const PORT2 = "<%= PORT2 %>";
+        const FASTAPI_URL1 = "<%= FASTAPI_URL1 %>";
+        const FASTAPI_URL2 = "<%= FASTAPI_URL2 %>";
+        const NODE_URL1 = "<%= NODE_URL1 %>";
+        const NODE_URL2 = "<%= NODE_URL2 %>";
+        
+        let filename = '';
+
+        // 새로고침
+        function reloadPage() {
+            window.location.reload(); 
+        }
+
+		// 홈 버튼 리다이렉트
+        function redirectHome() {
+            window.location.href = NODE_URL2;
+        }
+
+        // 이미지 미리보기 
+        function uploadImage(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var uploadedImage = document.getElementById('uploadedImage');
+                    uploadedImage.src = e.target.result;
+                    uploadedImage.style.display = 'block';
+                    document.getElementById('uploadIcon').style.display = 'none';
+                    document.querySelector('.upload-text').style.display = 'none';
+                    document.getElementById('options').style.display = 'flex';
+                };
+                reader.readAsDataURL(file);
+
+                handleFileUpload(file);
+            }
+        }
+
+        // 드롭다운 토글
+        function toggleDropdown() {
+            var dropdown = document.getElementById('languageDropdown');
+            var dropdownIcon = document.getElementById('dropdownIcon');
+            if (dropdown.style.display === 'none') {
+                dropdown.style.display = 'block';
+                dropdownIcon.textContent = 'arrow_drop_up'; // 위쪽 화살표로 변경
+            } else {
+                dropdown.style.display = 'none';
+                dropdownIcon.textContent = 'arrow_drop_down'; // 아래쪽 화살표로 변경
+            }
+        }
+
+        // 언어 선택 핸들러
+        function selectLanguage(language) {
+            console.log("Selected language: ", language);
+			let languageButton = document.getElementById('languageSelect');
+			let dropdownIcon = '<span class="material-icons" id="dropdownIcon">arrow_drop_down</span>';
+			
+			if (language === 'ko') {
+				languageButton.innerHTML = '<span>한국어</span>' + dropdownIcon;
+			} else if (language === 'en') {
+				languageButton.innerHTML = '<span>영어</span>' + dropdownIcon;
+			} else {
+				languageButton.innerHTML = '<span>언어 선택</span>' + dropdownIcon;
+			}
+            toggleDropdown(); // 드롭다운 닫기
+            // 선택된 언어에 따라 번역 기능을 설정할 수 있습니다.
+        }
+
+        // EXIF 정보 전송 및 이미지 업로드
+        async function uploadWithExif(file) {
+            return new Promise((resolve, reject) => {
+                EXIF.getData(file, function() {
+                    var exifData = EXIF.getAllTags(this);
+                    var formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("exifData", JSON.stringify(exifData));
+
+                    axios.post(FASTAPI_URL2 + '/uploadImage', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                    .then(response => {
+                        console.log("Uploaded filename: ", response.data.file_name);
+                        console.log("MySQL 저장 성공: ", response.data.message); // MySQL 저장 성공 로그 추가
+                        filename = response.data.file_name;
+                        resolve(response.data.file_name);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        reject(error);
+                    });
+                });
+            });
+        }
+
+        // 파일 업로드 처리
+        async function handleFileUpload(file) {
+            try {
+                const filename = await uploadWithExif(file);
+                console.log("Filename after upload: ", filename);
+            } catch (error) {
+                console.error('Error handling file upload:', error);
+            }
+        }
+
+        // 임시..
+        async function redirect() {
+            window.location.href = NODE_URL1 + `/result`;
+        }
+
+        // 번역하기 버튼 클릭 시 동작
+        async function translateImage() {
+            try {
+                const response = await axios.get(FASTAPI_URL2 + `/get_image?filename=${filename}`, { responseType: 'blob' });
+                const imageBlob = response.data;
+                
+                // 여기서 이미지 Blob을 처리할 수 있습니다.
+                console.log("Image fetched successfully");
+
+				// Blob을 FormData로 변환
+				const formData = new FormData();
+				formData.append('file', imageBlob, filename);
+				formData.append('filename', filename);  // filename
+
+				// textExtractor API로 이미지 전송
+                console.log("textExtractor API로 이미지 전송: ", `${FASTAPI_URL1}/textExtractor`);
+				const processResponse = await axios.post(`${FASTAPI_URL1}/textExtractor`, formData, {
+					headers: {
+						'Content-Type': 'multipart/form-data'
+					}
+				});
+				console.log('Image processed successfully:', processResponse.data);
+
+				// filename만 textTranslator API로 전송
+				const filenameOnly = { filename: filename };
+
+				const translateResponse = await axios.post(`${FASTAPI_URL1}/textTranslator`, filenameOnly, {
+				headers: {
+					'Content-Type': 'application/json'
+					}
+				});
+				console.log('Filename sent successfully:', translateResponse.data);
+
+                // 결과 페이지로 리다이렉트
+                window.location.href = NODE_URL1 + `/result?filename=${filename}`;
+            } catch (error) {
+                console.error('Error translating image:', error);
+            }
+        }
+    </script>
+</body>
+</html>
